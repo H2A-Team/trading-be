@@ -1,0 +1,28 @@
+[project]
+name = "trading-be"
+version = "0.0.1"
+authors = [
+  { name="Huy Le Minh", email="leminhhuy.hcmus@gmail.com" },
+  { name="Anh Le Hoang", email="lehoanganh.le2001@gmail.com" },
+  { name="Hung Nguyen Hua", email="huahung.nguyen01@gmail.com" },
+]
+maintainers = [
+  { name="Huy Le Minh", email="leminhhuy.hcmus@gmail.com" },
+  { name="Anh Le Hoang", email="lehoanganh.le2001@gmail.com" },
+  { name="Hung Nguyen Hua", email="huahung.nguyen01@gmail.com" },
+]
+description = "Shows real-time crypto currency, stock price. Uses machine learning models for predicting price."
+keywords = ["trading", "price prediction", "crypto currency", "machine learning"]
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+homepage = "https://github.com/H2A-Team/trading-be"
+repository = "https://github.com/H2A-Team/trading-be"
+
+[tool.black]
+line-length = 120
