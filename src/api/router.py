@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from v1 import v1_router
+from .v1.router import v1_router
 
-# router = APIRouter(prefix=settings.REST_API_PREFIX)
-router = APIRouter(prefix="/api")
+import settings
+
+router = APIRouter(prefix=settings.REST_API_PREFIX)
 
 # api versioning
 router.include_router(router=v1_router)
