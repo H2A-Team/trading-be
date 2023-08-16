@@ -1,10 +1,17 @@
+from logging import getLogger
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import settings
 from api.router import router
+from logging_config import config_logging, get_uvicorn_logging_config
 from sockets.socket_io import init_socket_app
+
+
+def bootstrap_config():
+    config_logging()
 
 
 def init_app() -> FastAPI:
@@ -27,7 +34,7 @@ def init_app() -> FastAPI:
     return app
 
 
-# FastAPI app includes both rest api and socker servers
+bootstrap_config()
 backend_app = init_app()
 
 if __name__ == "__main__":
@@ -36,5 +43,6 @@ if __name__ == "__main__":
         host=settings.SERVER_HOST,
         port=settings.SERVER_PORT,
         reload=settings.DEBUG,
-        log_level=settings.LOGGING_LEVEL,
+        log_level=settings.LOGGING_LEVEL.lower(),
+        log_config=get_uvicorn_logging_config(),
     )
