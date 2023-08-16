@@ -1,11 +1,19 @@
-from socketio import ASGIApp, AsyncServer
+from logging import getLogger
 
-import settings
+import socketio
+
+from settings import settings
+
+logger = getLogger('socketio_event_handlers')
+
+sio_server = socketio.AsyncServer(async_mode='asgi', logger=True, cors_allowed_origins=settings.CORS_ALLOWED_ORIGINS)
 
 
-def init_socket_app() -> ASGIApp:
-    socketio_server = AsyncServer(
-        async_mode="asgi",
-        cors_allowed_origins=settings.CORS_ALLOWED_ORIGINS,
-    )
-    return ASGIApp(socketio_server=socketio_server)
+@sio_server.event
+async def connect(sid, environ):
+    logger.info(f"{sid}: connected")
+
+
+@sio_server.event
+async def disconnect(sid):
+    logger.info(f"{sid}, disconnected")

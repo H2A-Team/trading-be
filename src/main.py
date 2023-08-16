@@ -1,21 +1,21 @@
-from logging import getLogger
+from logging import basicConfig
 
+import socketio
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import settings
 from api.router import router
-from logging_config import config_logging, get_uvicorn_logging_config
-from sockets.socket_io import init_socket_app
+from settings import settings
+from sockets.socket_io import sio_server
 
 
 def bootstrap_config():
-    config_logging()
+    basicConfig(**settings.logging_config)
 
 
 def init_app() -> FastAPI:
-    app = FastAPI()
+    app = FastAPI(**settings.app_config)
 
     # CORS
     app.add_middleware(
@@ -28,8 +28,8 @@ def init_app() -> FastAPI:
     app.include_router(router=router)
 
     # Socket
-    socketio_app = init_socket_app()
-    app.mount(settings.SOCKET_PREFIX, app=socketio_app)
+    socketio_app = socketio.ASGIApp(sio_server, socketio_path=settings.SOCKET_SOCKETIO_PATH)
+    app.mount(settings.SOCKET_PREFIX, socketio_app)
 
     return app
 
@@ -44,5 +44,5 @@ if __name__ == "__main__":
         port=settings.SERVER_PORT,
         reload=settings.DEBUG,
         log_level=settings.LOGGING_LEVEL.lower(),
-        log_config=get_uvicorn_logging_config(),
+        log_config=settings.uvicorn_logging_config,
     )

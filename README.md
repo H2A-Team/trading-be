@@ -64,3 +64,4 @@
 
 ## References
 - [Project template](https://github.com/Aeternalis-Ingenium/FastAPI-Backend-Template/tree/trunk/backend/src)
+- [Python SocketIO](https://python-socketio.readthedocs.io/en/latest/server.html)
