@@ -62,6 +62,16 @@
     pip install -r requirements.txt
     ```
 
+## Instruction to start app
+- You must do setup virtual environment and install pip dependencies as above.
+- Steps to run app:
+    - Activate virtual environment as instruction above:
+    - Move to `src` directory and run the following command to run app:
+        ```sh
+        python main.py
+        ```
+    - App will be running on <SERVER_HOST>:<SERVER_PORT> depending on your `.env` file
+
 ## References
 - [Project template](https://github.com/Aeternalis-Ingenium/FastAPI-Backend-Template/tree/trunk/backend/src)
 - [Python SocketIO](https://python-socketio.readthedocs.io/en/latest/server.html)
