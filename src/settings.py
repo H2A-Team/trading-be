@@ -8,6 +8,7 @@ ROOT_DIR = pathlib.Path(__file__).parent.resolve()
 get_config = AutoConfig(search_path=str(ROOT_DIR) + "/.env")
 
 PREFIX_LOG_FORMAT = "[%(asctime)s] [%(levelname)s] [%(name)s]"
+_PREDICTION_MODEL_LOCATION = str(pathlib.Path(__file__).resolve()) + "/predictions/trained-models"
 
 
 class Settings:
@@ -45,6 +46,10 @@ class Settings:
     # socket
     SOCKET_PREFIX = get_config("SOCKET_PREFIX", default="/socket")
     SOCKET_SOCKETIO_PATH = get_config("SOCKET_SOCKETIO_PATH", default="socketio")
+
+    # core machine learning / predictions
+    PREDICTION_MODEL_LOCATION = _PREDICTION_MODEL_LOCATION
+    PREDICTION_TIME_STEPS = 60
 
     @property
     def app_config(self):
