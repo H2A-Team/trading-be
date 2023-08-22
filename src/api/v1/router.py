@@ -36,7 +36,7 @@ async def get_symbols(symbols: list[str] = Query(default=None)):
         )
 
         total = len(crypto_symbols)
-        limit = total if total > limit else 20
+        limit = total if total > 20 else 20
         return RestResponseList(data=crypto_symbols, total=total, offset=0, limit=limit)
 
     raise HTTPException(status_code=500)
