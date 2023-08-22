@@ -13,8 +13,13 @@ class BinanceRestService:
 
     def get_exchange_information(self, symbols: Union[List[str], None] = None):
         status_code, data = self._get("exchangeInfo", params={"symbols": symbols})
-        result = data["symbols"] if status_code == 200 else "ERROR"
-        return status_code, result
+
+        if status_code == 200:
+            return 200, data["symbols"]
+        elif status_code == 400:
+            return 200, []
+
+        return status_code, "ERROR"
 
     # params: query parameters, data: request body
     def _request(self, method: str, endpoint: str, params=None, data=None):

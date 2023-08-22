@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
 from models.crypto_symbol import CryptoSymbol
+
 from models.response import RestResponseList
 from services.binance_rest_service import BinanceRestService
 from settings import settings
