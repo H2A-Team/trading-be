@@ -8,3 +8,4 @@ tensorflow==2.13.0
 xgboost==1.7.6
 yfinance==0.2.28
 typing_extensions==4.7.1
+requests==2.31.0

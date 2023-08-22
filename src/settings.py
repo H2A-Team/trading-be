@@ -51,6 +51,13 @@ class Settings:
     PREDICTION_MODEL_LOCATION = _PREDICTION_MODEL_LOCATION
     PREDICTION_TIME_STEPS = 60
 
+    # Binance Rest API
+    BINANCE_REST_API_URL = get_config("BINANCE_REST_API_URL", default="https://testnet.binance.vision/api")
+    BINANCE_REST_API_KEY = get_config("BINANCE_REST_API_KEY")
+    BINANCE_REST_SECRET_KEY = get_config("BINANCE_REST_SECRET_KEY")
+
+    # Binance WebSocket API
+
     @property
     def app_config(self):
         return {
