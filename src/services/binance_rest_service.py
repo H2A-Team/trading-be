@@ -1,5 +1,6 @@
-import requests
 from typing import List, Union
+
+import requests
 
 
 def concat_base_url_and_path(base_url: str, endpoint: str):
@@ -20,6 +21,26 @@ class BinanceRestService:
             return 200, []
 
         return status_code, "ERROR"
+
+    def get_ui_klines(
+        self,
+        symbol: str,
+        interval: str,
+        start_time: Union[int, None] = None,
+        end_time: Union[int, None] = None,
+        limit: int = 500,
+    ):
+        status_code, data = self._get(
+            "uiKlines",
+            params={
+                "symbol": symbol,
+                "interval": interval,
+                "startTime": start_time,
+                "endTime": end_time,
+                "limit": limit,
+            },
+        )
+        return 200, data if status_code == 200 else []
 
     # params: query parameters, data: request body
     def _request(self, method: str, endpoint: str, params=None, data=None):

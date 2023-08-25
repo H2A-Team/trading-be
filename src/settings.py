@@ -64,6 +64,13 @@ class Settings:
     # Binance market specs
     BINANCE_MARKET_TIMEFRAMES = ["1D", "5D", "1M", "3M", "6M"]
     BINANCE_MARKET_INTERVALS = ["1m", "5m", "30m", "1h", "2h"]
+    BINANCE_MARKET_MAX_CANDLES = {
+        "1m": 1440,
+        "5m": 1440,
+        "30m": 1488,
+        "1h": 2232,
+        "2h": 2232,
+    }
     BINANCE_MARKET_SYMBOLS = [
         "BNBBUSD",
         "BTCBUSD",

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
+from models.candle import Candle
 from models.crypto_symbol import CryptoSymbol
-
 from models.response import RestResponseList
 from services.binance_rest_service import BinanceRestService
 from settings import settings
@@ -47,3 +47,35 @@ async def get_symbols(symbols: list[str] = Query(default=None)):
         return RestResponseList(data=crypto_symbols, total=total, offset=0, limit=limit)
 
     raise HTTPException(status_code=500)
+
+
+@router.get(
+    path="/symbols/{symbol}/complete_candles",
+    response_model=RestResponseList[Candle],
+    status_code=status.HTTP_200_OK,
+    tags=["Symbol"],
+)
+async def get_candles_by_timeframe(symbol: str, interval: str):
+    if symbol.upper() not in settings.BINANCE_MARKET_SYMBOLS or interval not in settings.BINANCE_MARKET_INTERVALS:
+        return RestResponseList(data=[], total=0, offset=0, limit=1000)
+
+    _, ui_klines = service.get_ui_klines(symbol, interval, limit=1000)
+    candles = list(
+        map(
+            lambda kline: Candle(
+                binanceEventTimestamp=kline[0],
+                symbol=symbol,
+                startIntervalTimestamp=kline[0],
+                endIntervalTimestamp=kline[6],
+                interval=interval,
+                openPrice=kline[1],
+                closePrice=kline[4],
+                highPrice=kline[2],
+                lowPrice=kline[3],
+                volume=kline[5],
+            ),
+            ui_klines,
+        )
+    )
+
+    return RestResponseList(data=candles, total=len(candles), offset=0, limit=1000)
