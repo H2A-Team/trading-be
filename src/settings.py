@@ -4,6 +4,8 @@ import pathlib
 from decouple import AutoConfig, Csv
 from uvicorn.config import LOGGING_CONFIG
 
+from utilities.binance import create_channel_name, create_combination_stream_names
+
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
 get_config = AutoConfig(search_path=str(ROOT_DIR) + "/.env")
 
@@ -57,6 +59,36 @@ class Settings:
     BINANCE_REST_SECRET_KEY = get_config("BINANCE_REST_SECRET_KEY")
 
     # Binance WebSocket API
+    BINANCE_SOCKET_EXCHANGE = get_config("BINANCE_SOCKET_EXCHANGE", default="binance.com-testnet")
+
+    # Binance market specs
+    BINANCE_MARKET_TIMEFRAMES = ["1D", "5D", "1M", "3M", "6M"]
+    BINANCE_MARKET_INTERVALS = ["1m", "5m", "30m", "1h", "2h"]
+    BINANCE_MARKET_SYMBOLS = [
+        "BNBBUSD",
+        "BTCBUSD",
+        "ETHBUSD",
+        "LTCBUSD",
+        "TRXBUSD",
+        "XRPBUSD",
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "LTCUSDT",
+        "TRXUSDT",
+        "XRPUSDT",
+        "BNBBTC",
+        "ETHBTC",
+        "LTCBTC",
+        "TRXBTC",
+        "XRPBTC",
+        "LTCBNB",
+        "TRXBNB",
+        "XRPBNB",
+    ]
+    BINANCE_MARKET_CHANNELS = [create_channel_name(interval) for interval in BINANCE_MARKET_INTERVALS]
+    # symbol must be in lowercase
+    BINANCE_MARKET_STREAM_NAMES = create_combination_stream_names(BINANCE_MARKET_SYMBOLS, BINANCE_MARKET_INTERVALS)
 
     @property
     def app_config(self):
