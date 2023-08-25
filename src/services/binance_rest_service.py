@@ -13,8 +13,13 @@ class BinanceRestService:
         self.api_key = api_key
 
     def get_exchange_information(self, symbols: Union[List[str], None] = None):
-        status_code, data = self._get("exchangeInfo", params={"symbols": symbols})
+        endpoint = "exchangeInfo"
 
+        if symbols is not None and len(symbols) > 0:
+            serialized_symbol_list = "[" + ",".join([f'"{symbol}"' for symbol in symbols]) + "]"
+            endpoint += f"?symbols={serialized_symbol_list}"
+
+        status_code, data = self._get(endpoint)
         if status_code == 200:
             return 200, data["symbols"]
         elif status_code == 400:
