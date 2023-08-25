@@ -17,6 +17,12 @@ service = BinanceRestService(settings.BINANCE_REST_API_URL, settings.BINANCE_RES
     tags=["Symbol"],
 )
 async def get_symbols(symbols: list[str] = Query(default=None)):
+    if symbols is None or len(symbols) == 0:
+        symbols = settings.BINANCE_MARKET_SYMBOLS
+    else:
+        for i in range(0, len(symbols)):
+            symbols[i] = symbols[i].upper()
+
     status, exchange_info = service.get_exchange_information(symbols)
     if status == 200:
         crypto_symbols = list(
