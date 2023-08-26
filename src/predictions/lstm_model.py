@@ -3,7 +3,7 @@ import os
 import numpy as np
 from keras.layers import LSTM, Dense
 from keras.models import Sequential, load_model
-from pandas import DataFrame, concat, date_range
+from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
 from settings import settings
@@ -15,6 +15,7 @@ STEPS = 60
 def split_dataset(dataset, train_size=TRAIN_SIZE):
     index = int(len(dataset) * train_size)
     return dataset[:index], dataset[index:]
+
 
 def build_model_filename(path=settings.PREDICTION_MODEL_LOCATION) -> str:
     prefix = path if path.endswith('/') else path + '/'
@@ -29,26 +30,17 @@ class LSTMModel:
         self.model = self._load_or_train_model()
 
     # example of interval values: 1min
-    def predict_future_prices(self, n_future_preds: int, interval: str):
+    def predict_future_prices(self, n_future_preds: int):
         train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
         self.scaler.fit(train_dataset.values)
 
-        future_prediction = self._moving_test_window_preds(
-            test_dataset,
+        predictions = self._moving_test_window_preds(
+            self.filtered_dataset,
             test_dataset.shape[0] - STEPS,
             n_future_preds,
         )
-        future_prediction_df = DataFrame(
-            data={'Predictions': future_prediction.flatten()},
-            index=date_range(
-                start=test_dataset.index[test_dataset.shape[0] - 1],
-                periods=n_future_preds + 1,
-                freq=interval,
-            )[1:],
-        )
 
-        test_dataset = concat([test_dataset, future_prediction_df])
-        return test_dataset
+        return predictions.tolist()
 
     def _normalize_dataset(self):
         final_dataset = self.filtered_dataset.values
@@ -66,13 +58,13 @@ class LSTMModel:
 
         return x_train_data, y_train_data
 
-    def _moving_test_window_preds(self, test_dataset, start, n_future_preds):
+    def _moving_test_window_preds(self, dataset, start, n_future_preds):
         # Declare variable where we store the prediction made on each window and the moving input window
-        prediction = []
+        predictions = []
         moving_input_window = []
 
         # Set the inputs
-        inputs = self.scaler.transform(test_dataset.values)
+        inputs = self.scaler.transform(dataset.values)
 
         moving_input_window.append(inputs[start : (start + STEPS), :])
         moving_input_window = np.array(moving_input_window)
@@ -86,7 +78,7 @@ class LSTMModel:
             y_hat = self.model.predict(moving_input_window)
 
             # Append y_hat to predictions
-            prediction.append(y_hat[0, :])
+            predictions.append(y_hat[0, :])
 
             # Reshape y_hat for concatenation with moving test window
             y_hat = y_hat.reshape(1, 1, 1)
@@ -94,8 +86,8 @@ class LSTMModel:
             # Remove first element
             moving_input_window = np.concatenate((moving_input_window[:, 1:, :], y_hat), axis=1)
 
-        prediction = self.scaler.inverse_transform(DataFrame(prediction))
-        return prediction
+        predictions = self.scaler.inverse_transform(DataFrame(predictions))
+        return predictions
 
     def _load_or_train_model(self):
         model_filename = build_model_filename()
