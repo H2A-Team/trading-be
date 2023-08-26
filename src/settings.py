@@ -48,6 +48,7 @@ class Settings:
     # socket
     SOCKET_PREFIX = get_config("SOCKET_PREFIX", default="/socket")
     SOCKET_SOCKETIO_PATH = get_config("SOCKET_SOCKETIO_PATH", default="socketio")
+    SOCKET_CORS_ALLOWED_ORIGINS = "*" if CORS_ALLOWED_ORIGINS == ["*"] else CORS_ALLOWED_ORIGINS
 
     # core machine learning / predictions
     PREDICTION_MODEL_LOCATION = _PREDICTION_MODEL_LOCATION
