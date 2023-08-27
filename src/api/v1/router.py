@@ -5,6 +5,7 @@ from pyti.rate_of_change import rate_of_change
 from pyti.relative_strength_index import relative_strength_index
 
 from models.candle import Candle
+from models.candle_prediction_body import CandlePredictionBody
 from models.crypto_symbol import CryptoSymbol
 from models.response import RestResponseList
 from models.timeframe_prediction_body import TimeframePredictionBody
@@ -185,3 +186,56 @@ async def predict_future_price_by_interval(symbol: str, body: TimeframePredictio
         result["rsi"] = [{"timestamp": timestamps[i], "value": rsi[i]} for i in range(len(timestamps))]
 
     return result
+
+
+@router.post(
+    path="/symbols/{symbol}/predict-candle",
+    status_code=status.HTTP_200_OK,
+    tags=["Symbol"],
+)
+async def predict_future_price_by_interval(symbol: str, body: CandlePredictionBody):
+    interval = body.interval
+    model_name = body.model
+    symbol = symbol.upper()
+    if (
+        symbol not in settings.BINANCE_MARKET_SYMBOLS
+        or interval not in settings.BINANCE_MARKET_INTERVALS
+        or model_name not in settings.BINANCE_PREDICTION_MODELS
+    ):
+        return {}
+
+    max_candles = settings.BINANCE_MARKET_MAX_CANDLES[interval]
+    limit = 1000 if max_candles >= 1000 else max_candles
+    total_ui_klines = []
+    end_time = None
+
+    # fetch by descending time
+    while limit > 0:
+        _, ui_klines = service.get_ui_klines(symbol, interval, limit=limit, end_time=end_time)
+
+        # time(ui_klines) is before time(total_ui_klines)
+        total_ui_klines = ui_klines + total_ui_klines
+        if len(total_ui_klines) == 0:
+            break
+
+        end_time = total_ui_klines[0][0] - 1  # oldest_start_time - 1
+
+        # recalculate limit
+        max_candles -= limit
+        limit = 1000 if max_candles >= 1000 else max_candles
+
+    close_prices = []
+    for kline in total_ui_klines:
+        close_prices.append(float(kline[4]))
+
+    df = pd.DataFrame({"Close": close_prices})
+    if model_name == "lstm":
+        model = LSTMModel(df)
+    elif model_name == "rnn":
+        model = SimpleRNNModel(df)
+    else:
+        model = XGBoostModel(df)
+
+    predictions = model.apply_closing_price_indicator(1)
+    next_ts = total_ui_klines[len(total_ui_klines) - 1][0]
+    return {"timestamp": next_ts, "value": predictions[0]}

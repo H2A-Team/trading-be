@@ -36,7 +36,7 @@ class BinanceRestService:
         limit: int = 500,
     ):
         status_code, data = self._get(
-            "uiKlines",
+            "klines",
             params={
                 "symbol": symbol,
                 "interval": interval,
