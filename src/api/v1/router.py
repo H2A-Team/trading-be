@@ -190,6 +190,7 @@ async def predict_future_price_by_interval(symbol: str, body: TimeframePredictio
 
 @router.post(
     path="/symbols/{symbol}/predict-candle",
+    response_model=Candle,
     status_code=status.HTTP_200_OK,
     tags=["Symbol"],
 )
@@ -224,18 +225,44 @@ async def predict_future_price_by_interval(symbol: str, body: CandlePredictionBo
         max_candles -= limit
         limit = 1000 if max_candles >= 1000 else max_candles
 
+    open_prices = []
+    high_prices = []
+    low_prices = []
     close_prices = []
     for kline in total_ui_klines:
+        open_prices.append(float(kline[1]))
+        high_prices.append(float(kline[2]))
+        low_prices.append(float(kline[3]))
         close_prices.append(float(kline[4]))
 
-    df = pd.DataFrame({"Close": close_prices})
+    df_open = pd.DataFrame({"Close": open_prices})
+    df_high = pd.DataFrame({"Close": high_prices})
+    df_low = pd.DataFrame({"Close": low_prices})
+    df_close = pd.DataFrame({"Close": close_prices})
     if model_name == "lstm":
-        model = LSTMModel(df)
+        model = LSTMModel(df_open)
     elif model_name == "rnn":
-        model = SimpleRNNModel(df)
+        model = SimpleRNNModel(df_open)
     else:
-        model = XGBoostModel(df)
+        model = XGBoostModel(df_open)
 
-    predictions = model.apply_closing_price_indicator(1)
-    next_ts = total_ui_klines[len(total_ui_klines) - 1][0]
-    return {"timestamp": next_ts, "value": predictions[0]}
+    len_total_ui_klines = len(total_ui_klines)
+    interval_ts = settings.BINANCE_MARKET_INTERVALS_TO_TIMESTAMPS[interval]
+    start_ts = total_ui_klines[len_total_ui_klines - 1][0] + interval_ts
+
+    open_predictions, high_predictions, low_predictions, close_predictions = model.predict_next_candle(
+        df_open, df_high, df_low, df_close
+    )
+
+    return Candle(
+        binanceEventTimestamp=start_ts,
+        symbol=symbol,
+        startIntervalTimestamp=start_ts,
+        endIntervalTimestamp=start_ts + interval_ts,
+        interval=interval,
+        openPrice=str(open_predictions[0]),
+        closePrice=str(close_predictions[0]),
+        highPrice=str(high_predictions[0]),
+        lowPrice=str(low_predictions[0]),
+        volume="0",
+    )

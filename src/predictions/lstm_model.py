@@ -41,6 +41,50 @@ class LSTMModel:
         predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, n_future_preds)
         return predictions.flatten().tolist()
 
+    def predict_next_candle(self, open_df, high_df, low_df, close_df):
+        # open
+        self.dataset = open_df
+        self.filtered_dataset = open_df
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose="2")
+        train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
+        self.scaler.fit(train_dataset.values)
+        open_predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, 1)
+
+        # high
+        self.dataset = high_df
+        self.filtered_dataset = high_df
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose="2")
+        train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
+        self.scaler.fit(train_dataset.values)
+        high_predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, 1)
+
+        # low
+        self.dataset = low_df
+        self.filtered_dataset = low_df
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose="2")
+        train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
+        self.scaler.fit(train_dataset.values)
+        low_predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, 1)
+
+        # close
+        self.dataset = close_df
+        self.filtered_dataset = close_df
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose="2")
+        train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
+        self.scaler.fit(train_dataset.values)
+        close_predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, 1)
+
+        return (
+            open_predictions.flatten().tolist(),
+            high_predictions.flatten().tolist(),
+            low_predictions.flatten().tolist(),
+            close_predictions.flatten().tolist(),
+        )
+
     def _normalize_dataset(self):
         final_dataset = self.filtered_dataset.values
         train_data, _ = split_dataset(final_dataset)

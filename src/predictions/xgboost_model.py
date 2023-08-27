@@ -23,9 +23,7 @@ class XGBoostModel:
         self.dataset = dataset
         self.model = self._load_or_train_model(False)
 
-    # example of interval values: "1min"
-    def apply_closing_price_indicator(self, n_future_preds: int):
-        dataset = self.dataset.copy()
+    def _predict(self, dataset, n_future_preds: int):
         dataset = self._apply_moving_averages_indicator(dataset)
         dataset = self._apply_relative_strength_index_indicator(dataset)
 
@@ -51,6 +49,18 @@ class XGBoostModel:
             x = dataset.tail(1).drop(columns=["Close"], axis=1)
 
         return predictions
+
+    # example of interval values: "1min"
+    def apply_closing_price_indicator(self, n_future_preds: int):
+        return self._predict(self.dataset, n_future_preds)
+
+    def predict_next_candle(self, open_df, high_df, low_df, close_df):
+        return (
+            self._predict(open_df, 1),
+            self._predict(high_df, 1),
+            self._predict(low_df, 1),
+            self._predict(close_df, 1),
+        )
 
     def _apply_moving_averages_indicator(self, dataset):
         dataset["EMA_9"] = dataset["Close"].ewm(9).mean().shift()
