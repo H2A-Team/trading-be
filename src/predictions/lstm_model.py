@@ -1,9 +1,9 @@
 import os
 
 import numpy as np
+import pandas as pd
 from keras.layers import LSTM, Dense
 from keras.models import Sequential, load_model
-from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
 from settings import settings
@@ -23,24 +23,23 @@ def build_model_filename(path=settings.PREDICTION_MODEL_LOCATION) -> str:
 
 
 class LSTMModel:
-    def __init__(self, dataset: DataFrame):
+    def __init__(self, dataset: pd.DataFrame):
         self.dataset = dataset
-        self.filtered_dataset = DataFrame(data=dataset["Close"].to_numpy(), index=dataset["Date"], columns=["Close"])
+        # self.filtered_dataset = pd.DataFrame(data=dataset["Close"].to_numpy(), index=dataset["Date"], columns=["Close"])
+        self.filtered_dataset = pd.DataFrame(data=dataset["Close"].to_numpy(), columns=["Close"])
         self.scaler = MinMaxScaler(feature_range=(0, 1))
-        self.model = self._load_or_train_model()
+        self.model = self.load_or_train_model()
 
     # example of interval values: 1min
-    def predict_future_prices(self, n_future_preds: int):
+    def apply_closing_price_indicator(self, n_future_preds: int):
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=1, batch_size=1, verbose="2")
+
         train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
         self.scaler.fit(train_dataset.values)
 
-        predictions = self._moving_test_window_preds(
-            self.filtered_dataset,
-            test_dataset.shape[0] - STEPS,
-            n_future_preds,
-        )
-
-        return predictions.tolist()
+        predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, n_future_preds)
+        return predictions.flatten().tolist()
 
     def _normalize_dataset(self):
         final_dataset = self.filtered_dataset.values
@@ -86,20 +85,20 @@ class LSTMModel:
             # Remove first element
             moving_input_window = np.concatenate((moving_input_window[:, 1:, :], y_hat), axis=1)
 
-        predictions = self.scaler.inverse_transform(DataFrame(predictions))
+        predictions = self.scaler.inverse_transform(pd.DataFrame(predictions))
         return predictions
 
-    def _load_or_train_model(self):
+    def load_or_train_model(self, restrict_train=False):
         model_filename = build_model_filename()
 
-        if os.path.isfile(model_filename):
-            # use prebuilt model
-            model = load_model(model_filename)
-        else:
+        if restrict_train or not os.path.isfile(model_filename):
             # normalize dataset and train lstm model
             x_train_data, y_train_data = self._normalize_dataset()
             model = self._train(x_train_data, y_train_data)
             model.save(model_filename)
+        else:
+            # use prebuilt model
+            model = load_model(model_filename)
 
         self.model = model
         return model

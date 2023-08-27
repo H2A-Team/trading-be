@@ -7,6 +7,7 @@ from settings import settings
 
 TRAIN_SIZE = 0.8
 
+
 def split_dataset(dataset, train_size=TRAIN_SIZE):
     index = int(len(dataset) * train_size)
     return dataset[:index], dataset[index:]
@@ -20,10 +21,10 @@ def build_model_filename(path=settings.PREDICTION_MODEL_LOCATION) -> str:
 class XGBoostModel:
     def __init__(self, dataset: pd.DataFrame):
         self.dataset = dataset
-        self.model = self._load_or_train_model()
+        self.model = self._load_or_train_model(False)
 
     # example of interval values: "1min"
-    def predict_future_prices(self, n_future_preds: int):
+    def apply_closing_price_indicator(self, n_future_preds: int):
         dataset = self.dataset.copy()
         dataset = self._apply_moving_averages_indicator(dataset)
         dataset = self._apply_relative_strength_index_indicator(dataset)
@@ -31,26 +32,23 @@ class XGBoostModel:
         data_train = dataset.iloc[30:, :]
         data_train.index = range(len(data_train))
 
-        xtrain = data_train.drop(columns=["Close"], axis=1)
-        ytrain = data_train["Close"].copy()
+        train_dataset, test_dataset = split_dataset(data_train, TRAIN_SIZE)
+        xtrain = train_dataset.drop(columns=["Close"], axis=1)
+        ytrain = train_dataset["Close"].copy()
+        xtest = test_dataset.drop(columns=["Close"], axis=1)
         self.model.fit(xtrain, ytrain, eval_set=[(xtrain, ytrain)], verbose=False)
 
         predictions = []
-        for i in range(n_future_preds):
-            xtest = xtrain.iloc[-1:, :]
-
-            # predict
-            yhat = self.model.predict(xtest)
-            predictions.append(yhat[0])
+        x = xtest.tail(1)
+        while len(predictions) < n_future_preds:
+            pred = self.model.predict(x)
+            predictions += pred.tolist()
 
             # featuring
-            dataset = pd.concat([dataset, pd.DataFrame(data={"Close": [yhat[0]]}, index=[dataset.index[-1] + 1])])
+            dataset = pd.concat([dataset, pd.DataFrame({"Close": pred.tolist()})], ignore_index=True)
             dataset = self._apply_moving_averages_indicator(dataset)
             dataset = self._apply_relative_strength_index_indicator(dataset)
-
-            pred_df = dataset.tail(1)
-            pred_df.index = xtrain.tail(1).index
-            xtrain = pd.concat([xtrain.iloc[1:, :], pred_df.drop(columns=["Close"], axis=1)])
+            x = dataset.tail(1).drop(columns=["Close"], axis=1)
 
         return predictions
 
@@ -63,7 +61,7 @@ class XGBoostModel:
         return dataset
 
     def _apply_relative_strength_index_indicator(self, dataset, n=14):
-        close = self.dataset["Close"]
+        close = dataset["Close"]
         delta = close.diff()
         delta = delta[1:]
         pricesUp = delta.copy()
@@ -91,11 +89,11 @@ class XGBoostModel:
                 learning_rate=0.3,
                 early_stopping_rounds=20,
             )
-            model = model.load_model(model_filename)
+            model.load_model(model_filename)
         else:
             # if not is_applied_indicators:
-            #     self._apply_moving_averages_indicator()
-            #     self._apply_relative_strength_index_indicator()
+            #     self.dataset = self._apply_moving_averages_indicator(self.dataset)
+            #     self.dataset = self._apply_relative_strength_index_indicator(self.dataset)
 
             train_dataset, test_dataset = split_dataset(self.dataset, TRAIN_SIZE)
             x_train_data = train_dataset.drop(columns=["Close"], axis=1)
