@@ -10,7 +10,7 @@ ROOT_DIR = pathlib.Path(__file__).parent.resolve()
 get_config = AutoConfig(search_path=str(ROOT_DIR) + "/.env")
 
 PREFIX_LOG_FORMAT = "[%(asctime)s] [%(levelname)s] [%(name)s]"
-_PREDICTION_MODEL_LOCATION = str(pathlib.Path(__file__).resolve()) + "/predictions/trained-models"
+_PREDICTION_MODEL_LOCATION = str(ROOT_DIR) + "/predictions/trained-models"
 
 
 class Settings:
@@ -97,6 +97,8 @@ class Settings:
     BINANCE_MARKET_CHANNELS = [create_channel_name(interval) for interval in BINANCE_MARKET_INTERVALS]
     # symbol must be in lowercase
     BINANCE_MARKET_STREAM_NAMES = create_combination_stream_names(BINANCE_MARKET_SYMBOLS, BINANCE_MARKET_INTERVALS)
+    BINANCE_PREDICTION_INDICATORS = ["close", "roc", "rsi"]
+    BINANCE_PREDICTION_MODELS = ["lstm", "rnn", "xgboost"]
 
     @property
     def app_config(self):
