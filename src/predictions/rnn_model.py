@@ -3,13 +3,13 @@ import os
 import numpy as np
 from keras.layers import Dense, Dropout, SimpleRNN
 from keras.models import Sequential, load_model
-from pandas import DataFrame, concat, date_range
+from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
 from settings import settings
 
 TRAIN_SIZE = 0.7
-STEPS = 60
+STEPS = 50
 
 
 def split_dataset(dataset, train_size=TRAIN_SIZE):
@@ -25,22 +25,20 @@ def build_model_filename(path=settings.PREDICTION_MODEL_LOCATION) -> str:
 class SimpleRNNModel:
     def __init__(self, dataset: DataFrame):
         self.dataset = dataset
-        self.filtered_dataset = DataFrame(data=dataset["Close"].to_numpy(), index=dataset["Date"], columns=["Close"])
+        self.filtered_dataset = DataFrame(data=dataset["Close"].to_numpy(), columns=["Close"])
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.model = self._load_or_train_model()
 
     # example of interval values: 1min
-    def predict_future_prices(self, n_future_preds: int):
+    def apply_closing_price_indicator(self, n_future_preds: int):
+        x_train_data, y_train_data = self._normalize_dataset()
+        self.model.fit(x_train_data, y_train_data, epochs=50, batch_size=32, verbose="2")
+
         train_dataset, test_dataset = split_dataset(self.filtered_dataset, TRAIN_SIZE)
         self.scaler.fit(train_dataset.values)
 
-        predictions = self._moving_test_window_preds(
-            self.filtered_dataset,
-            test_dataset.shape[0] - STEPS,
-            n_future_preds,
-        )
-
-        return predictions.tolist()
+        predictions = self._moving_test_window_preds(test_dataset, test_dataset.shape[0] - STEPS, n_future_preds)
+        return predictions.flatten().tolist()
 
     def _normalize_dataset(self):
         final_dataset = self.filtered_dataset.values
