@@ -1,13 +1,13 @@
 from logging import basicConfig
 
-# import socketio
+import socketio
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.router import router
 from settings import settings
-# from sockets.socket_io import sio_server
+from sockets.socket_io import sio_server
 
 
 def bootstrap_config():
@@ -28,8 +28,8 @@ def init_app() -> FastAPI:
     app.include_router(router=router)
 
     # Socket
-    # socketio_app = socketio.ASGIApp(sio_server, socketio_path=settings.SOCKET_SOCKETIO_PATH)
-    # app.mount(settings.SOCKET_PREFIX, socketio_app)
+    socketio_app = socketio.ASGIApp(sio_server, socketio_path=settings.SOCKET_SOCKETIO_PATH)
+    app.mount(settings.SOCKET_PREFIX, socketio_app)
 
     return app
 
