@@ -163,3 +163,4 @@ cython_debug/
 # Others
 *.DS_Store
 *.swp
+.python-version

@@ -31,20 +31,20 @@
     ```
 - Create environment at the root directory (syntax below):
     ```sh
-    python3 -m venv <path-to-your-venv>
+    python3 -m venv venv
     ```
 - Activate environment:
     - MacOS:
         ```sh
-        source <path-to-your-venv>/bin/activate
+        source venv>/bin/activate
         ```
     - Windows:
         ```sh
         # command line
-        <path-to-your-venv>\Scripts\activate.bat
+        vevn\Scripts\activate.bat
 
         # power shell
-        <path-to-your-venv>\Scripts\Activate.ps1
+        vevn\Scripts\Activate.ps1
         ```
 - Deactivate environment:
     ```sh
@@ -53,13 +53,23 @@
 
 ### 3. Usages
 - You must activate virutal environment before installing pip dependencies.
+- Install neccessary dependencies for this project:
+    - Install dependencies in `requirements.txt` files:
+        ```
+        pip install -r requirements.txt
+        ```
+    - Install `tensorflow 2.13.0`
+        ```
+        pip install tensorflow==2.13.0
+        ```
+    - Fix conclict about versoning of `typing_extensions` dependency between tensorflow and others. Execute the below command after installing `tensorflow`:
+        ```
+        pip install typing_extensions==4.7.1
+        ```
+
 - After activating your virtual environment, you could install any dependencies using `pip`:
     ```
     pip install <dependency-name>
-    ```
-- Install neccessary dependencies;
-    ```
-    pip install -r requirements.txt
     ```
 
 ## Instruction to start app
