@@ -18,8 +18,7 @@ def split_dataset(dataset, train_size=TRAIN_SIZE):
 
 
 def build_model_filename(path=settings.PREDICTION_MODEL_LOCATION) -> str:
-    prefix = path if path.endswith('/') else path + '/'
-    return f'{prefix}lstm.keras'
+    return os.path.join(path, "lstm.keras")
 
 
 class LSTMModel:

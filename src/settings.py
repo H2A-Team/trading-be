@@ -1,4 +1,5 @@
 import copy
+import os
 import pathlib
 
 from decouple import AutoConfig, Csv
@@ -7,10 +8,10 @@ from uvicorn.config import LOGGING_CONFIG
 from utilities.binance import create_channel_name, create_combination_stream_names
 
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
-get_config = AutoConfig(search_path=str(ROOT_DIR) + "/.env")
+get_config = AutoConfig(search_path=os.path.join(str(ROOT_DIR), ".env"))
 
 PREFIX_LOG_FORMAT = "[%(asctime)s] [%(levelname)s] [%(name)s]"
-_PREDICTION_MODEL_LOCATION = str(ROOT_DIR) + "/predictions/trained-models"
+_PREDICTION_MODEL_LOCATION = os.path.join(str(ROOT_DIR), "predictions", "trained-models")
 
 
 class Settings:
