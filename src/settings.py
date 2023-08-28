@@ -1,13 +1,17 @@
 import copy
+import os
 import pathlib
 
 from decouple import AutoConfig, Csv
 from uvicorn.config import LOGGING_CONFIG
 
+from utilities.binance import create_channel_name, create_combination_stream_names
+
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
-get_config = AutoConfig(search_path=str(ROOT_DIR) + "/.env")
+get_config = AutoConfig(search_path=os.path.join(str(ROOT_DIR), ".env"))
 
 PREFIX_LOG_FORMAT = "[%(asctime)s] [%(levelname)s] [%(name)s]"
+_PREDICTION_MODEL_LOCATION = os.path.join(str(ROOT_DIR), "predictions", "trained-models")
 
 
 class Settings:
@@ -45,6 +49,60 @@ class Settings:
     # socket
     SOCKET_PREFIX = get_config("SOCKET_PREFIX", default="/socket")
     SOCKET_SOCKETIO_PATH = get_config("SOCKET_SOCKETIO_PATH", default="socketio")
+    SOCKET_CORS_ALLOWED_ORIGINS = "*" if CORS_ALLOWED_ORIGINS == ["*"] else CORS_ALLOWED_ORIGINS
+
+    # core machine learning / predictions
+    PREDICTION_MODEL_LOCATION = _PREDICTION_MODEL_LOCATION
+    PREDICTION_TIME_STEPS = 60
+
+    # Binance Rest API
+    BINANCE_REST_API_URL = get_config("BINANCE_REST_API_URL", default="https://testnet.binance.vision/api")
+    BINANCE_REST_API_KEY = get_config("BINANCE_REST_API_KEY")
+    BINANCE_REST_SECRET_KEY = get_config("BINANCE_REST_SECRET_KEY")
+
+    # Binance WebSocket API
+    BINANCE_SOCKET_EXCHANGE = get_config("BINANCE_SOCKET_EXCHANGE", default="binance.com-testnet")
+
+    # Binance market specs
+    BINANCE_MARKET_TIMEFRAMES = ["1D", "5D", "1M"]
+    BINANCE_MARKET_INTERVALS = ["1m", "5m", "30m"]
+    BINANCE_MARKET_MAX_CANDLES = {
+        "1m": 24 * 60,
+        "5m": 5 * 24 * 60 / 5,
+        "30m": 31 * 24 * 60 / 30,
+    }
+    BINANCE_MARKET_INTERVALS_TO_TIMESTAMPS = {
+        "1m": 60 * 1000,
+        "5m": 5 * 60 * 1000,
+        "30m": 30 * 60 * 1000,
+    }
+    BINANCE_MARKET_SYMBOLS = [
+        "BNBBUSD",
+        "BTCBUSD",
+        "ETHBUSD",
+        "LTCBUSD",
+        "TRXBUSD",
+        "XRPBUSD",
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "LTCUSDT",
+        "TRXUSDT",
+        "XRPUSDT",
+        "BNBBTC",
+        "ETHBTC",
+        "LTCBTC",
+        "TRXBTC",
+        "XRPBTC",
+        "LTCBNB",
+        "TRXBNB",
+        "XRPBNB",
+    ]
+    BINANCE_MARKET_CHANNELS = [create_channel_name(interval) for interval in BINANCE_MARKET_INTERVALS]
+    # symbol must be in lowercase
+    BINANCE_MARKET_STREAM_NAMES = create_combination_stream_names(BINANCE_MARKET_SYMBOLS, BINANCE_MARKET_INTERVALS)
+    BINANCE_PREDICTION_INDICATORS = ["close", "roc", "rsi"]
+    BINANCE_PREDICTION_MODELS = ["lstm", "rnn", "xgboost"]
 
     @property
     def app_config(self):
