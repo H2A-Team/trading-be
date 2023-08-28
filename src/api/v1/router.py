@@ -127,8 +127,8 @@ async def predict_future_price_by_interval(symbol: str, body: TimeframePredictio
         or interval not in settings.BINANCE_MARKET_INTERVALS
         or len(indicator_types) == 0
         or model_name not in settings.BINANCE_PREDICTION_MODELS
-        or body.rocLength >= 1
-        or body.rsiLength >= 1
+        or body.rocLength < 1
+        or body.rsiLength < 1
     ):
         return {}
 
@@ -194,7 +194,7 @@ async def predict_future_price_by_interval(symbol: str, body: TimeframePredictio
     status_code=status.HTTP_200_OK,
     tags=["Symbol"],
 )
-async def predict_future_price_by_interval(symbol: str, body: CandlePredictionBody):
+async def predict_candle(symbol: str, body: CandlePredictionBody):
     interval = body.interval
     model_name = body.model
     symbol = symbol.upper()
